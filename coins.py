@@ -28,11 +28,11 @@ def display(pairs):
 
 def findCircles(src, tgt):
     circles = cv2.HoughCircles(src, cv.CV_HOUGH_GRADIENT, 1, 200,
-                               param1=100, param2=50,
+                               param1=60, param2=40,
                                minRadius=150,
                                maxRadius=1500)
     for i in circles[0,:]:
-        cv2.circle(tgt, (i[0], i[1]), i[2], Color.GREEN, 3)
+        cv2.circle(tgt, (i[0], i[1]), i[2], Color.RED, 3)
 
 def GaussTest(src, tgt):
     img = cv2.GaussianBlur(src, (5, 5), 2, sigmaY=2)
@@ -40,24 +40,27 @@ def GaussTest(src, tgt):
     
         
 def CannyTest(src, res):
-    img = cv2.imread(src, 0)
-    edges = cv2.Canny(img, 80, 40, L2gradient=True)
-    target = Image(edges.transpose())
-    findCircles(edges, target)
-    target.save(res)
-    # cv2.imwrite(res, target)
+    cimg = cv2.imread(src, 1)
+    cfiltered = cv2.pyrMeanShiftFiltering(cimg, 20, 20, 1)
+    filtered = cv2.cvtColor(cimg, cv2.cv.CV_BGR2GRAY)
+    # filtered = filtered.astype(float)
+    # filtered *= 1./255.
+    # print(filtered)
+    blurred = cv2.GaussianBlur(filtered, (5, 5), 0)
+    laplacian = cv2.Laplacian(blurred, cv2.CV_8U)
+    # sharpened = (laplacian.astype(float)/255.) * 1.5
+    # edges = cv2.Canny(filtered, 100, 50, L2gradient=True)
+    # target = Image(edges.transpose())
+    findCircles(laplacian, cimg)
+    # cv2.circle(edges, (600, 200), 100, Color.RED, 3)
+    cv2.imwrite(res, cimg)
+    # cv2.imwrite(res, filtered)
 
 def ParseImage(src, res):
-    cimg = cv2.imread(src, cv2.CV_LOAD_IMAGE_COLOR)
-    cfiltered = cv2.pyrMeanShiftFiltering(cimg, 10, 10, 1)
-    filtered = cv2.cvtColor(cfiltered, cv2.cv.CV_BGR2GRAY)
-    print(filtered)
-    # findCircles(filtered, cimg)
-    # cv2.circle(cimg, (200, 500), 50, Color.GREEN, 3)
-    
-    # cv2.imwrite(res, cimg)
-    
-    
+    pass
+
+
 if __name__ == '__main__':
     # houghCirclesTest(sys.argv[1], sys.argv[2])
-    ParseImage(sys.argv[1], sys.argv[2])
+    CannyTest(*sys.argv[1:3])
+    # ParseImage(sys.argv[1], sys.argv[2])
